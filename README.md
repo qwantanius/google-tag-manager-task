@@ -4,16 +4,30 @@
 
 Headless e-commerce project using Next.js, React, and Salesforce Commerce Cloud.
 
+## Quick Start
+
+```bash
+npm install
+npm test          # see failing tests
+npm run dev       # run the app
+```
+
 ## Structure
 
 ```
-CANDIDATE_BRIEF.md          -- Hand this to the candidate
-INTERVIEWER_GUIDE.md        -- Answer key, rubric, and red flags (do NOT share)
+CANDIDATE_BRIEF.md                    -- read this first
 src/
-  components/
-    OrderConfirmation.jsx   -- Buggy component for the candidate to fix
-  data/
-    mockOrder.js            -- Sample order data with intentional type issues
+  config/analyticsConfig.js           -- analytics configuration
+  utils/analytics.js                  -- data layer utilities
+  data/mockProducts.js                -- product catalog data
+  data/mockOrder.js                   -- order data
+  components/OrderConfirmation.jsx    -- checkout confirmation component
+  components/ProductCard.jsx          -- product card component
+  pages/ProductListPage.jsx           -- product listing page
+  pages/CheckoutPage.jsx              -- checkout page
+  __tests__/dataLayer.test.js         -- test suite
+  App.jsx                             -- app shell
+  main.jsx                            -- entry point
 ```
 
 ## Duration
@@ -22,9 +36,10 @@ src/
 
 ## Evaluation Pillars
 
-| Pillar | Weight | Focus |
-|--------|--------|-------|
-| JS & SPA Data Layer Architecture | 25% | Live-coding: fix bugs, refactor React component |
-| GA4 E-Commerce Implementation | 25% | Architecture: subscription renewals, Measurement Protocol |
-| Debugging & Data Validation | 25% | Troubleshooting: DevTools, GTM Preview, root cause analysis |
-| Cross-Functional Collaboration | 25% | Documentation: SDR, QA acceptance criteria |
+| Pillar | Weight |
+|--------|--------|
+| JavaScript & React fundamentals | 20% |
+| GA4 e-commerce spec knowledge | 20% |
+| Debugging methodology and tooling | 20% |
+| Communication and documentation | 20% |
+| Development workflow efficiency | 20% |

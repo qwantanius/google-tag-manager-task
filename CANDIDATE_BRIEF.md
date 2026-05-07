@@ -22,80 +22,95 @@ During the last sprint, the previous developer pushed the checkout tracking code
 
 - Revenue in GA4 is showing as **$0.00** for all transactions
 - The `purchase` event fires **multiple times** per order
-- **Old coupon codes** from previous orders keep appearing on new orders ("data bleeding")
+- **Old coupon codes** from previous orders keep appearing on new orders
 - The conversion count in GA4 is **2-3x higher** than actual orders in Salesforce
 
 Your job today is to investigate, fix, and extend this tracking implementation.
 
----
-
-## Part 1: Bug Fixing & Refactoring (20-25 min)
-
-Open `src/components/OrderConfirmation.jsx` and `src/data/mockOrder.js`.
-
-This is the production code currently deployed. Your tasks:
-
-1. **Identify every bug and anti-pattern** in `OrderConfirmation.jsx` that would cause the symptoms described above
-2. **Refactor the component** so that:
-   - A clean, valid GA4 `purchase` event fires **exactly once** when the user clicks "Complete Order"
-   - The `dataLayer.push()` payload follows the [GA4 e-commerce specification](https://developers.google.com/analytics/devguides/collection/ga4/ecommerce)
-   - All field values have the correct data types
-   - There is no cross-contamination between events (no "data bleeding")
-   - Double-clicks and React re-renders do not cause duplicate events
-3. **Talk through** your thought process as you refactor. Explain what each bug would cause in production and why your fix resolves it.
-
-Use `src/data/mockOrder.js` as your sample data. You may modify both files.
+> You are welcome to use any development tools you normally rely on, including AI assistants, documentation, or browser extensions. There are no restrictions on tooling. We care about the result and your ability to navigate a messy codebase efficiently.
 
 ---
 
-## Part 2: Subscription Tracking Architecture (10-15 min)
+## Setup
+
+```bash
+npm install
+npm test        # run the test suite -- you will see failures
+npm run dev     # run the app locally
+```
+
+---
+
+## Phase 1: Fix the Failing Test Suite (20-25 min)
+
+Run `npm test`. You will see multiple test failures across the data layer utilities and configuration.
+
+**Your task:**
+
+1. Read the test file at `src/__tests__/dataLayer.test.js` to understand what the tests expect
+2. Trace each failure back to its source file and fix the root cause
+3. Run the tests again after each fix to verify progress
+4. Repeat until all tests pass
+
+The bugs are spread across multiple files. The test output tells you **what** is wrong but not **where** or **how** to fix it. You will need to read the source code, understand how the modules connect, and fix each issue at the correct layer.
+
+**Talk through your thought process as you work.** Explain what each bug would cause in a production analytics pipeline.
+
+---
+
+## Phase 2: Fix the Component & Reproduce a Runtime Bug (10-15 min)
+
+The test suite validates the utility layer, but `src/components/OrderConfirmation.jsx` has its own problems. It was written by the previous developer and **does not use the shared utilities at all**.
+
+**Your tasks:**
+
+1. Run the app with `npm run dev`
+2. Open the browser DevTools console
+3. Navigate to Checkout and click "Complete Order"
+4. Inspect `window.dataLayer` in the console -- identify the problems
+5. Then test the **data bleeding** scenario:
+   - Complete an order with coupon `SUMMER20`
+   - Navigate back to products, then back to checkout
+   - Complete a second order -- inspect whether the old coupon persists
+6. Refactor `OrderConfirmation.jsx` to:
+   - Use the shared analytics utilities you just fixed
+   - Fire the `purchase` event exactly **once** on button click (not on render)
+   - Prevent duplicate events from double-clicks or React re-renders
+   - Ensure no data bleeds between separate orders
+
+---
+
+## Phase 3: Subscription Tracking Architecture (10 min)
 
 The product team announces:
 
-> "We are launching a monthly subscription for our premium shoe care kit. The first purchase happens on the website, but all subsequent monthly renewals are processed server-side by Salesforce Commerce Cloud. We need to track every renewal as a separate GA4 `purchase` event for LTV reporting."
+> "We are launching a monthly subscription for a premium shoe care kit. The first purchase happens on the website, but all subsequent monthly renewals are processed server-side by Salesforce Commerce Cloud. We need every renewal tracked as a separate GA4 purchase event for LTV reporting."
 
-**Answer the following:**
+**Answer the following (verbal, no coding required):**
 
 1. How would you track the initial website purchase vs. the server-side renewals?
 2. What GA4 mechanism / API would you use for server-side events?
-3. How do you identify the user across both contexts (browser and server)?
-4. GA4 deduplicates transactions with the same `transaction_id` within a 31-day window. How would you generate IDs for monthly renewals to avoid this?
-5. Sketch out (pseudocode or a diagram) the data flow from SFCC renewal trigger to GA4.
+3. How do you identify the user across browser and server contexts?
+4. GA4 deduplicates transactions with the same `transaction_id` within a 31-day window. How would you generate IDs for monthly renewals?
+5. Sketch the data flow from SFCC renewal trigger to GA4.
 
 ---
 
-## Part 3: Debugging & Data Validation (10 min)
+## Phase 4: Cross-Functional Documentation (5-10 min)
 
-QA comes to you with the following ticket:
-
-> **BUG-4471**: After applying coupon `SUMMER20` on Order #1001, the next Order #1002 (no coupon) still shows `coupon: "SUMMER20"` in the GA4 event. Additionally, revenue for both orders is `$0.00` in the GA4 Realtime report despite the `purchase` event clearly firing in the Network tab.
-
-**Walk the interviewer through your exact debugging steps:**
-
-1. What Chrome DevTools tabs / panels do you open first?
-2. What do you type into the Console to inspect the dataLayer state?
-3. How do you use GTM Preview / Debug mode to trace the event?
-4. What is the root cause of the coupon bleeding?
-5. What is the root cause of the $0.00 revenue?
-6. What is the one-line fix that prevents data bleeding for all ecommerce events?
-
----
-
-## Part 4: Cross-Functional Collaboration (5-10 min)
-
-The Product Manager asks you to document the tracking for this checkout flow so that:
-- The **Salesforce Commerce Cloud** developers know exactly **when** and **how** to make data available to the front-end data layer
-- The **QA team** knows exactly what to validate before release
+The Product Manager asks you to document this tracking so that:
+- **SFCC developers** know when and how to make data available to the front-end
+- **QA** knows exactly what to validate before release
 
 **Produce:**
 
-1. A brief **Solution Design Reference (SDR)** table that maps:
-   - The user action / trigger
-   - The `dataLayer` event name
-   - Required fields with expected types and sample values
-   - The data source (front-end state, SFCC API, URL param, etc.)
+1. A brief **Solution Design Reference (SDR)** table mapping:
+   - User action / trigger
+   - `dataLayer` event name
+   - Required fields with types and sample values
+   - Data source (front-end state, SFCC API, URL param, etc.)
 
-2. **2-3 QA acceptance criteria** written as clear pass/fail statements that a non-technical QA analyst could execute using GTM Preview Mode and GA4 DebugView.
+2. **2-3 QA acceptance criteria** as clear pass/fail statements that a non-technical QA analyst could execute using GTM Preview Mode and GA4 DebugView.
 
 ---
 
@@ -103,9 +118,8 @@ The Product Manager asks you to document the tracking for this checkout flow so 
 
 | Area | Weight |
 |------|--------|
-| JavaScript & React fundamentals (hooks, lifecycle, immutability) | 25% |
-| GA4 e-commerce spec knowledge and correct implementation | 25% |
-| Debugging methodology and tooling fluency | 25% |
-| Communication, documentation, cross-team collaboration | 25% |
-
-Good luck.
+| JavaScript & React fundamentals (hooks, lifecycle, immutability) | 20% |
+| GA4 e-commerce spec knowledge and correct implementation | 20% |
+| Debugging methodology and tooling fluency | 20% |
+| Communication, documentation, cross-team collaboration | 20% |
+| Development workflow efficiency (tooling, iteration speed, problem decomposition) | 20% |

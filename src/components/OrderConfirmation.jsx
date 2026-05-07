@@ -45,21 +45,21 @@ const OrderConfirmation = ({ order }) => {
       },
     });
 
-    submitOrder(order).then(() => {
+    setTimeout(() => {
       setIsSubmitting(false);
-    });
+    }, 2000);
   };
 
   return (
-    <div className="order-summary">
+    <div className="order-confirmation">
       <h2>Order Summary</h2>
       <p>Order ID: {order.id}</p>
-      <p>Total: ${order.total}</p>
-      {order.appliedCoupon && <p>Coupon: {order.appliedCoupon}</p>}
+      <p>Total: {order.total}</p>
+      {order.appliedCoupon && <p>Coupon Applied: {order.appliedCoupon}</p>}
       <ul>
         {order.items.map((item) => (
           <li key={item.sku}>
-            {item.name} - ${item.price} x {item.qty}
+            {item.name} - {item.price} x {item.qty}
           </li>
         ))}
       </ul>

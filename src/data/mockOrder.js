@@ -1,6 +1,8 @@
 const mockOrder = {
   id: "ORD-20260507-1842",
   total: "$149.97",
+  tax: "$12.50",
+  shipping: "$5.99",
   appliedCoupon: "SUMMER20",
   items: [
     {
