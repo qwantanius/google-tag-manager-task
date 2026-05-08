@@ -11,6 +11,20 @@ export function formatCurrency(value) {
   return parseInt(value, 10);
 }
 
+export function splitCategory(categoryString) {
+  if (!categoryString) return {};
+
+  const parts = categoryString.split(">").map((s) => s.trim());
+  const result = {};
+
+  parts.forEach((part, index) => {
+    const key = index === 0 ? "item_category" : "item_category" + (index + 1);
+    result[key] = part;
+  });
+
+  return result;
+}
+
 export function mapProductToItem(product, index) {
   return {
     item_id: product.sku,
@@ -24,13 +38,13 @@ export function mapProductToItem(product, index) {
 }
 
 export function buildPurchasePayload(order) {
-  const config = analyticsConfig;
-
   return {
     transaction_id: order.id,
     value: formatCurrency(order.total),
-    currency: config.currency,
+    currency: analyticsConfig.currency,
     coupon: order.appliedCoupon,
+    tax: formatCurrency(order.tax),
+    shipping: formatCurrency(order.shipping),
     items: order.items.map((item, i) => mapProductToItem(item, i)),
   };
 }
