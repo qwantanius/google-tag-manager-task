@@ -59,7 +59,7 @@ const OrderConfirmation = ({ order }) => {
       <ul>
         {order.items.map((item) => (
           <li key={item.sku}>
-            {item.name} — {item.price} x {item.qty}
+            {item.name} - {item.price} x {item.qty}
           </li>
         ))}
       </ul>
